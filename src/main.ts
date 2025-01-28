@@ -11,6 +11,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { Logger, PinoLogger } from 'nestjs-pino';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { corsMiddleware } from './common/middlewares/cors.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -20,6 +21,10 @@ async function bootstrap() {
       bufferLogs: true,
     },
   );
+  const logger = await app.resolve(PinoLogger);
+  const configService = app.get(ConfigService);
+
+  app.use(corsMiddleware);
   app.useLogger(app.get(Logger));
   app.useGlobalPipes(
     new ValidationPipe({
@@ -31,12 +36,7 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new HttpExceptionFilter());
-
-  const logger = await app.resolve(PinoLogger);
   app.useGlobalInterceptors(new LoggingInterceptor(logger));
-
-  const configService = app.get(ConfigService);
-  const port = configService.get('PORT') as number;
 
   const documentFactory = () =>
     SwaggerModule.createDocument(app, {
@@ -44,6 +44,7 @@ async function bootstrap() {
     });
   SwaggerModule.setup('docs', app, documentFactory());
 
+  const port = configService.get('PORT') as number;
   await app.listen(port ?? 3000);
 }
 

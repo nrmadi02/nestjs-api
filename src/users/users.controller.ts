@@ -13,8 +13,9 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { ApiResponseDecorator } from 'src/common/decorators/api-response.decorator';
-import { User } from './entities/user.entity';
 import { ApiErrorResponseDecorator } from 'src/common/decorators/api-error-response.decorator';
+import { SucessResponse } from 'src/common/utils/response.util';
+import { IUser } from './entities/user.entity';
 
 @Controller('users')
 export class UsersController {
@@ -26,29 +27,35 @@ export class UsersController {
   }
 
   @Get()
-  @ApiResponseDecorator(User, true)
+  @ApiResponseDecorator(IUser, true)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
     notFound: true,
   })
-  findAll(@Query() query: UserQueryDto) {
-    console.log(query);
-    return this.usersService.findAll();
+  async findAll(@Query() query: UserQueryDto) {
+    const { data, meta } = await this.usersService.findAll(query);
+    return SucessResponse('Success to get all users', 200, data, meta);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  @ApiResponseDecorator(IUser)
+  @ApiErrorResponseDecorator({
+    validation: true,
+    badRequest: true,
+    notFound: true,
+  })
+  findOne(@Param('id') id: number) {
+    return this.usersService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto) {
+    return this.usersService.update(id, updateUserDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: number) {
     return this.usersService.remove(+id);
   }
 }

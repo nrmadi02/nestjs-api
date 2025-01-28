@@ -40,7 +40,7 @@ export class LoggingInterceptor implements NestInterceptor {
               config: config,
               data,
             },
-            'Request Completed',
+            `Request Completed -> ${method} ${url} -> ${Date.now() - now}ms`,
           );
         },
         error: (error) => {
@@ -52,7 +52,7 @@ export class LoggingInterceptor implements NestInterceptor {
               config: config,
               err,
             },
-            err.message,
+            `${err.message} -> ${method} ${url} -> ${Date.now() - now}ms`,
           );
         },
       }),

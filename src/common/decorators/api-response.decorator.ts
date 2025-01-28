@@ -1,17 +1,18 @@
 import { Type, applyDecorators } from '@nestjs/common';
 import { ApiExtraModels, ApiOkResponse, getSchemaPath } from '@nestjs/swagger';
-import { ApiResponse } from '../dto/api-response.dto';
+import { ApiResponse, ApiResponsePaginated } from '../dtos/api-response.dto';
 
 export const ApiResponseDecorator = <TModel extends Type<any>>(
   model: TModel,
   isArray: boolean = false,
 ) => {
+  const ResponseClass = isArray ? ApiResponsePaginated : ApiResponse;
   return applyDecorators(
-    ApiExtraModels(ApiResponse, model),
+    ApiExtraModels(ResponseClass, model),
     ApiOkResponse({
       schema: {
         allOf: [
-          { $ref: getSchemaPath(ApiResponse) },
+          { $ref: getSchemaPath(ResponseClass) },
           {
             properties: {
               data: isArray

@@ -1,18 +1,23 @@
-// common/dto/api-response.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
 
 export class PaginationMeta {
+  @ApiProperty({ example: 10 })
+  total: number;
+
+  @ApiProperty({ example: 10 })
+  lastPage: number;
+
   @ApiProperty({ example: 1 })
-  page: number;
+  currentPage: number;
 
   @ApiProperty({ example: 10 })
-  limit: number;
+  totalPerPage: number;
 
-  @ApiProperty({ example: 100 })
-  totalItems: number;
+  @ApiProperty({ example: null })
+  prevPage: number | null;
 
-  @ApiProperty({ example: 10 })
-  totalPages: number;
+  @ApiProperty({ example: null })
+  nextPage: number | null;
 }
 
 export class ApiResponse<T> {
@@ -26,7 +31,9 @@ export class ApiResponse<T> {
   message: string;
 
   data: T;
+}
 
+export class ApiResponsePaginated<T> extends ApiResponse<T> {
   @ApiProperty({ required: false })
   meta?: PaginationMeta;
 }

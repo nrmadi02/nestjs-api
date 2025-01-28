@@ -3,7 +3,7 @@ import { ApiResponse } from '@nestjs/swagger';
 import {
   ApiBaseErrorResponse,
   ApiValidationErrorResponse,
-} from '../dto/api-error.dto';
+} from '../dtos/api-error.dto';
 
 export const ApiErrorResponseDecorator = (
   options: {
