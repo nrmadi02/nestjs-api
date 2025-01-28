@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export class UserQueryDto {
-  @IsOptional()
+  @IsNotEmpty()
   @ApiProperty({
     required: false,
   })
-  name: string;
+  name?: string;
 
   @IsOptional()
   @ApiProperty({

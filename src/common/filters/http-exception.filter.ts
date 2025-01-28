@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   ExceptionFilter,
   Catch,
@@ -13,7 +12,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const response = ctx.getResponse<FastifyReply>();
 
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -53,7 +51,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
       }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
     return response
       .status(statusCode)
       .header('Content-Type', 'application/json; charset=utf-8')

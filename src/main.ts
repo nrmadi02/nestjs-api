@@ -9,14 +9,18 @@ import { SwaggerModule } from '@nestjs/swagger';
 import { swaggerConfig } from './config/swagger.config';
 import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { Logger, PinoLogger } from 'nestjs-pino';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({
-      logger: true,
-    }),
+    new FastifyAdapter(),
+    {
+      bufferLogs: true,
+    },
   );
+  app.useLogger(app.get(Logger));
   app.useGlobalPipes(
     new ValidationPipe({
       validationError: { target: false, value: false },
@@ -27,6 +31,9 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  const logger = await app.resolve(PinoLogger);
+  app.useGlobalInterceptors(new LoggingInterceptor(logger));
 
   const configService = app.get(ConfigService);
   const port = configService.get('PORT') as number;

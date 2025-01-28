@@ -4,4 +4,7 @@ export default () => ({
     host: process.env.DATABASE_HOST,
     port: parseInt(process.env.DATABASE_PORT ?? '0', 10) || 5432,
   },
+  logtail: {
+    sourceToken: process.env.LOGTAIL_SOURCE_TOKEN || '',
+  },
 });
