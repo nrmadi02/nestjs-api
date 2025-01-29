@@ -11,6 +11,7 @@ import {
 import { UserQueryDto } from './dto/user-query.dto';
 import { hash } from 'crypto';
 import { IUser } from './entities/user.entity';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -20,8 +21,30 @@ export class UsersService {
     private readonly prisma: PrismaService,
   ) {}
 
-  hashPassword(password: string): string {
+  private hashPassword(password: string): string {
     return hash('sha256', password).toString();
+  }
+
+  private buildUserFilterConditions(
+    query: UserQueryDto,
+  ): Prisma.UserWhereInput {
+    const whereCondition: Prisma.UserWhereInput = {};
+
+    if (query.email) {
+      whereCondition.email = {
+        contains: query.email,
+        mode: 'insensitive',
+      };
+    }
+
+    if (query.username) {
+      whereCondition.username = {
+        contains: query.username,
+        mode: 'insensitive',
+      };
+    }
+
+    return whereCondition;
   }
 
   async create(createUserDto: CreateUserDto): Promise<IUser> {
@@ -45,8 +68,11 @@ export class UsersService {
 
   async findAll(query: UserQueryDto): Promise<PaginateOutput<IUser>> {
     this.logger.info('Get all users');
+
+    const filter = this.buildUserFilterConditions(query);
     const [users, total] = await this.prisma.$transaction([
       this.prisma.user.findMany({
+        where: filter,
         ...paginate({
           page: query.page,
           size: query.size,
@@ -57,7 +83,9 @@ export class UsersService {
           username: true,
         },
       }),
-      this.prisma.user.count(),
+      this.prisma.user.count({
+        where: filter,
+      }),
     ]);
 
     return paginateOutput<IUser>(users, total, {

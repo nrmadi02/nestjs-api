@@ -7,7 +7,7 @@ export class UserQueryDto extends QueryPaginationDto {
   @ApiProperty({
     required: false,
   })
-  name?: string;
+  username?: string;
 
   @IsOptional()
   @ApiProperty({
