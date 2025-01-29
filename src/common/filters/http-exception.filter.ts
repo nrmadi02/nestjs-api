@@ -5,7 +5,9 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { FastifyReply } from 'fastify';
+import { extractFieldFromUniqueError } from '../utils/extract';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -47,6 +49,19 @@ export class HttpExceptionFilter implements ExceptionFilter {
           statusCode: status,
           message: exception.message,
           errors: exceptionResponse.message as [],
+        };
+      }
+    }
+
+    if (exception instanceof PrismaClientKnownRequestError) {
+      const field = extractFieldFromUniqueError(exception.message);
+      if (exception.code === 'P2002') {
+        statusCode = HttpStatus.CONFLICT;
+        errorResponse = {
+          success: false,
+          statusCode: HttpStatus.CONFLICT,
+          message: 'Conflict Error',
+          errors: [`${field} already exists`],
         };
       }
     }

@@ -9,6 +9,7 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { PinoLogger } from 'nestjs-pino';
 import { FastifyRequest } from 'fastify';
+import { extractFieldFromUniqueError } from '../utils/extract';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -45,6 +46,7 @@ export class LoggingInterceptor implements NestInterceptor {
         },
         error: (error) => {
           const err = error as { message: string };
+          const field = extractFieldFromUniqueError(err.message);
           this.logger.error(
             {
               message: `${method} ${url}`,
@@ -52,7 +54,7 @@ export class LoggingInterceptor implements NestInterceptor {
               config: config,
               err,
             },
-            `${err.message} -> ${method} ${url} -> ${Date.now() - now}ms`,
+            `${field ? `${field} already exists` : err.message} -> ${method} ${url} -> ${Date.now() - now}ms`,
           );
         },
       }),

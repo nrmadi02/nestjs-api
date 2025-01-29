@@ -16,14 +16,29 @@ import { ApiResponseDecorator } from 'src/common/decorators/api-response.decorat
 import { ApiErrorResponseDecorator } from 'src/common/decorators/api-error-response.decorator';
 import { SucessResponse } from 'src/common/utils/response.util';
 import { IUser } from './entities/user.entity';
+import { ApiCreatedResponse, getSchemaPath } from '@nestjs/swagger';
+import { ApiResponse } from 'src/common/dtos/api-response.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  @ApiResponseDecorator(IUser)
+  @ApiErrorResponseDecorator({
+    validation: true,
+    badRequest: true,
+    notFound: true,
+  })
+  @ApiCreatedResponse({
+    schema: {
+      allOf: [{ $ref: getSchemaPath(ApiResponse) }],
+      properties: { data: { $ref: getSchemaPath(IUser) } },
+    },
+  })
+  async create(@Body() createUserDto: CreateUserDto) {
+    const user = await this.usersService.create(createUserDto);
+    return SucessResponse('Success to create user', 201, user);
   }
 
   @Get()
@@ -45,17 +60,32 @@ export class UsersController {
     badRequest: true,
     notFound: true,
   })
-  findOne(@Param('id') id: number) {
-    return this.usersService.findOne(id);
+  async findOne(@Param('id') id: number) {
+    const user = await this.usersService.findOne(id);
+    return SucessResponse('Success to get user', 200, user);
   }
 
   @Patch(':id')
-  update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+  @ApiResponseDecorator(IUser)
+  @ApiErrorResponseDecorator({
+    validation: true,
+    badRequest: true,
+    notFound: true,
+  })
+  async update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto) {
+    const user = await this.usersService.update(id, updateUserDto);
+    return SucessResponse('Success to update user', 200, user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: number) {
-    return this.usersService.remove(+id);
+  @ApiResponseDecorator(IUser)
+  @ApiErrorResponseDecorator({
+    validation: true,
+    badRequest: true,
+    notFound: true,
+  })
+  async remove(@Param('id') id: number) {
+    await this.usersService.remove(id);
+    return SucessResponse('Success to remove user', 200, true);
   }
 }
