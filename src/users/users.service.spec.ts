@@ -3,6 +3,7 @@ import { UsersService } from './users.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getLoggerToken, LoggerModule } from 'nestjs-pino';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { NotFoundException } from '@nestjs/common';
 
 const mockPinoLogger = {
   info: jest.fn(),
@@ -113,23 +114,94 @@ describe('UsersService', () => {
   });
 
   describe('when get user by id', () => {
+    const userId = 1;
+    const user = {
+      id: userId,
+      email: 'test@example.com',
+      username: 'testuser',
+    };
+
     it('should return user', async () => {
-      const user = { id: 1, email: 'email', username: 'username' };
       mockPrismaService.user.findUnique.mockResolvedValue(user);
 
-      const result = await service.findOne(1);
+      const result = await service.findOne(userId);
 
+      expect(mockPinoLogger.info).toHaveBeenCalledWith(
+        `Get user with id: ${userId}`,
+      );
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { id: userId },
+        select: { id: true, email: true, username: true },
+      });
       expect(result).toEqual(user);
+    });
+    it('should throw NotFoundException if user not found', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+
+      await expect(service.findOne(userId)).rejects.toThrow(NotFoundException);
+      expect(mockPinoLogger.info).toHaveBeenCalledWith(
+        `Get user with id: ${userId}`,
+      );
     });
   });
 
   describe('when delete user', () => {
+    const userId = 1;
+    const user = {
+      id: userId,
+      email: 'test@example.com',
+      username: 'testuser',
+    };
     it('should delete user', async () => {
-      mockPrismaService.user.delete.mockResolvedValue({ id: 1 });
+      mockPrismaService.user.findUnique.mockResolvedValue(user);
+      mockPrismaService.user.delete.mockResolvedValue(user);
 
-      const result = await service.remove(1);
+      const result = await service.remove(userId);
 
-      expect(result).toEqual(true);
+      expect(mockPinoLogger.info).toHaveBeenCalledWith(
+        `Remove user with id: ${userId}`,
+      );
+      expect(mockPrismaService.user.delete).toHaveBeenCalledWith({
+        where: { id: userId },
+      });
+      expect(result).toBe(true);
+    });
+    it('should throw NotFoundException if user not found', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+
+      await expect(service.remove(userId)).rejects.toThrow(NotFoundException);
+      expect(mockPinoLogger.info).toHaveBeenCalledWith(
+        `Remove user with id: ${userId}`,
+      );
+    });
+  });
+
+  describe('when update user', () => {
+    const userId = 1;
+    const updateUserDto = {
+      username: 'updateduser',
+      email: 'test@example.com',
+    };
+    const updatedUser = {
+      id: userId,
+      email: 'test@example.com',
+      username: 'updateduser',
+    };
+
+    it('should update a user successfully', async () => {
+      mockPrismaService.user.update.mockResolvedValue(updatedUser);
+
+      const result = await service.update(userId, updateUserDto);
+
+      expect(mockPinoLogger.info).toHaveBeenCalledWith(
+        `Update user with id: ${userId}`,
+      );
+      expect(mockPrismaService.user.update).toHaveBeenCalledWith({
+        where: { id: userId },
+        data: updateUserDto,
+        select: { id: true, email: true, username: true },
+      });
+      expect(result).toEqual(updatedUser);
     });
   });
 });

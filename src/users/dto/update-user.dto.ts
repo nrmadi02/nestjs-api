@@ -1,9 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
-import { User } from '@prisma/client';
 import { IsEmail, IsNotEmpty } from 'class-validator';
 
-export class UpdateUserDto implements User {
+export class UpdateUserDto {
   @ApiProperty()
   @IsNotEmpty()
   username: string;
@@ -14,8 +13,8 @@ export class UpdateUserDto implements User {
   email: string;
 
   @Exclude()
-  password: string;
+  password?: string;
 
   @Exclude()
-  id: number;
+  id?: number;
 }
