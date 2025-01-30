@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '@prisma/client';
 import { Exclude } from 'class-transformer';
 import { IsEmail, IsNotEmpty } from 'class-validator';
 
-export class CreateUserDto implements User {
+export class CreateUserDto {
+  roleId: number | null;
+
   @ApiProperty()
   @IsNotEmpty()
   username: string;
