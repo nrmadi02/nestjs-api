@@ -47,7 +47,7 @@ model User {
   tokens        Token[]
   refreshTokens RefreshToken[]
 
-  Role      Role?    @relation(fields: [roleId], references: [id])
+  role      Role?    @relation(fields: [roleId], references: [id])
   roleId    Int?
 
   createdAt DateTime @default(now()) @db.Timestamp(6)

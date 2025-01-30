@@ -32,7 +32,7 @@ export class CaslAbilityFactory {
     const userWithRole = await this.prisma.user.findUnique({
       where: { id: user.id },
       include: {
-        Role: {
+        role: {
           include: {
             permissions: true,
           },
@@ -40,13 +40,13 @@ export class CaslAbilityFactory {
       },
     });
 
-    if (!userWithRole?.Role) {
+    if (!userWithRole?.role) {
       can(Action.READ, 'Profile', { userId: user.id });
       can(Action.UPDATE, 'Profile', { userId: user.id });
       return build();
     }
 
-    userWithRole.Role.permissions.forEach((permission) => {
+    userWithRole.role.permissions.forEach((permission) => {
       if (permission.conditions) {
         can(
           permission.action,
@@ -58,7 +58,7 @@ export class CaslAbilityFactory {
       }
     });
 
-    if (userWithRole.Role.name === 'ADMIN') {
+    if (userWithRole.role.name === 'ADMIN') {
       can(Action.MANAGE, 'all');
     } else {
       can(Action.READ, 'Profile', { userId: user.id });

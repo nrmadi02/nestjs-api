@@ -1,35 +1,22 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { $Enums, User } from '@prisma/client';
-
-export class IUser implements Omit<User, 'password'> {
-  roleId: number | null;
-  @ApiProperty()
+export class IUser {
   id: number;
-
-  @ApiProperty()
-  email: string;
-
-  @ApiProperty()
-  username: string;
-
-  @ApiProperty()
-  createdAt: Date;
-
-  @ApiProperty()
-  isActive: boolean;
-
-  @ApiProperty()
-  isVerified: boolean;
-
-  @ApiProperty()
-  lastLoginAt: Date | null;
-
-  @ApiProperty()
-  role: $Enums.UserRole;
-
-  @ApiProperty()
-  updatedAt: Date;
-
-  @ApiProperty()
   uuid: string;
+  username: string;
+  email: string;
+  isVerified: boolean;
+  isActive: boolean;
+  lastLoginAt: Date | null;
+  profile?: {
+    firstName: string | null;
+    lastName: string | null;
+    avatar: string | null;
+    phoneNumber: string | null;
+  } | null;
+  role?: {
+    id: number;
+    name: string | null;
+    description?: string | null;
+  } | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
