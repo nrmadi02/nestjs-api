@@ -26,6 +26,34 @@ export class UsersService {
     private readonly prisma: PrismaService,
   ) {}
 
+  userDefaultSelect = Prisma.validator<Prisma.UserSelect>()({
+    id: true,
+    uuid: true,
+    username: true,
+    email: true,
+    isVerified: true,
+    isActive: true,
+    lastLoginAt: true,
+    createdAt: true,
+    updatedAt: true,
+    profile: {
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        phoneNumber: true,
+        avatar: true,
+      },
+    },
+    role: {
+      select: {
+        id: true,
+        name: true,
+        description: true,
+      },
+    },
+  });
+
   private async hashPassword(password: string): Promise<string> {
     return await bcrypt.hash(password, 10);
   }
@@ -92,20 +120,7 @@ export class UsersService {
           },
         },
       },
-      select: {
-        id: true,
-        uuid: true,
-        username: true,
-        email: true,
-        isVerified: true,
-        isActive: true,
-        lastLoginAt: true,
-        roleId: true,
-        createdAt: true,
-        updatedAt: true,
-        profile: true,
-        role: true,
-      },
+      select: this.userDefaultSelect,
     });
 
     return user;
@@ -122,20 +137,7 @@ export class UsersService {
           page: query.page,
           size: query.size,
         }),
-        select: {
-          id: true,
-          uuid: true,
-          username: true,
-          email: true,
-          isVerified: true,
-          isActive: true,
-          lastLoginAt: true,
-          roleId: true,
-          createdAt: true,
-          updatedAt: true,
-          profile: true,
-          role: true,
-        },
+        select: this.userDefaultSelect,
       }),
       this.prisma.user.count({
         where: filter,
@@ -153,20 +155,7 @@ export class UsersService {
 
     const user = await this.prisma.user.findUnique({
       where: { id },
-      select: {
-        id: true,
-        uuid: true,
-        username: true,
-        email: true,
-        isVerified: true,
-        isActive: true,
-        lastLoginAt: true,
-        roleId: true,
-        createdAt: true,
-        updatedAt: true,
-        profile: true,
-        role: true,
-      },
+      select: this.userDefaultSelect,
     });
     if (!user) {
       throw new NotFoundException([`User with id: ${id} not found`]);
@@ -180,20 +169,7 @@ export class UsersService {
 
     const user = await this.prisma.user.findUnique({
       where: { email },
-      select: {
-        id: true,
-        uuid: true,
-        username: true,
-        email: true,
-        isVerified: true,
-        isActive: true,
-        lastLoginAt: true,
-        roleId: true,
-        createdAt: true,
-        updatedAt: true,
-        profile: true,
-        role: true,
-      },
+      select: this.userDefaultSelect,
     });
 
     if (!user) {
@@ -234,20 +210,7 @@ export class UsersService {
           },
         },
       },
-      select: {
-        id: true,
-        uuid: true,
-        username: true,
-        email: true,
-        isVerified: true,
-        isActive: true,
-        lastLoginAt: true,
-        roleId: true,
-        createdAt: true,
-        updatedAt: true,
-        profile: true,
-        role: true,
-      },
+      select: this.userDefaultSelect,
     });
 
     return updateUser;
@@ -303,20 +266,7 @@ export class UsersService {
     const user = await this.prisma.user.update({
       where: { id },
       data: { lastLoginAt: new Date() },
-      select: {
-        id: true,
-        uuid: true,
-        username: true,
-        email: true,
-        isVerified: true,
-        isActive: true,
-        lastLoginAt: true,
-        roleId: true,
-        createdAt: true,
-        updatedAt: true,
-        profile: true,
-        role: true,
-      },
+      select: this.userDefaultSelect,
     });
 
     if (!user) {

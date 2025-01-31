@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { SetMetadata } from '@nestjs/common';
 import { AppAbility } from '../casl-ability.factory';
 import { Action } from '@prisma/client';

@@ -1,72 +1,66 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   AbilityBuilder,
   AbilityClass,
+  ExtractSubjectType,
   InferSubjects,
   PureAbility,
 } from '@casl/ability';
-import { User } from '@prisma/client';
+import { Permission, User } from '@prisma/client';
 import { Action } from '@prisma/client';
+
+export type Actions =
+  | Action
+  | 'manage'
+  | 'read'
+  | 'create'
+  | 'update'
+  | 'delete';
 
 export type Subjects =
   | InferSubjects<'User' | 'Profile' | 'Role' | 'Permission'>
   | 'all';
 
-export type AppAbility = PureAbility<[Action, Subjects]>;
+export type AppAbility = PureAbility<[Actions, Subjects]>;
 
 @Injectable()
 export class CaslAbilityFactory {
   constructor(private prisma: PrismaService) {}
 
-  async createForUser(user: User) {
+  createForUser(
+    user: User & {
+      role?: {
+        permissions: Permission[];
+      };
+    },
+  ) {
     const { can, build } = new AbilityBuilder<AppAbility>(
       PureAbility as AbilityClass<AppAbility>,
     );
 
-    const userWithRole = await this.prisma.user.findUnique({
-      where: { id: user.id },
-      include: {
-        role: {
-          include: {
-            permissions: true,
-          },
-        },
-      },
-    });
+    if (user.role?.permissions) {
+      for (const permission of user.role.permissions) {
+        const action = permission.action.toLowerCase() as Actions;
 
-    if (!userWithRole?.role) {
-      can(Action.READ, 'Profile', { userId: user.id });
-      can(Action.UPDATE, 'Profile', { userId: user.id });
-      return build();
-    }
-
-    userWithRole.role.permissions.forEach((permission) => {
-      if (permission.conditions) {
-        can(
-          permission.action,
-          permission.subject as Subjects,
-          permission.conditions,
-        );
-      } else {
-        can(permission.action, permission.subject as Subjects);
+        if (permission.conditions) {
+          can(action, permission.subject as any, permission.conditions);
+        } else {
+          can(action, permission.subject as any);
+        }
+        if (permission.action === Action.MANAGE) {
+          can(
+            ['read', 'create', 'update', 'delete'] as Actions[],
+            permission.subject as any,
+          );
+        }
       }
-    });
-
-    if (userWithRole.role.name === 'ADMIN') {
-      can(Action.MANAGE, 'all');
-    } else {
-      can(Action.READ, 'Profile', { userId: user.id });
-      can(Action.UPDATE, 'Profile', { userId: user.id });
-      can(Action.READ, 'User', { id: user.id });
-      can(Action.UPDATE, 'User', { id: user.id });
     }
 
-    return build();
+    return build({
+      detectSubjectType: (item: any) =>
+        item.constructor as ExtractSubjectType<Subjects>,
+    });
   }
 }

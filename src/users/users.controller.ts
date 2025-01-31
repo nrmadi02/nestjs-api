@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -16,9 +17,22 @@ import { ApiResponseDecorator } from 'src/common/decorators/api-response.decorat
 import { ApiErrorResponseDecorator } from 'src/common/decorators/api-error-response.decorator';
 import { SucessResponse } from 'src/common/utils/response.util';
 import { IUser } from './entities/user.entity';
-import { ApiCreatedResponse, getSchemaPath } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOperation,
+  ApiTags,
+  getSchemaPath,
+} from '@nestjs/swagger';
 import { ApiResponse } from 'src/common/dtos/api-response.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/role-auth.guard';
+import { PoliciesGuard } from 'src/casl/guards/policies.guard';
+import { CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
+import { AppAbility } from 'src/casl/casl-ability.factory';
+import { Roles } from 'src/auth/decorators/role-decorator';
 
+@ApiTags('[ADMIN] Users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -42,6 +56,11 @@ export class UsersController {
   }
 
   @Get()
+  @Roles('ADMIN')
+  @UseGuards(JwtAuthGuard, RolesGuard, PoliciesGuard)
+  @CheckPolicies((ability: AppAbility) => ability.can('read', 'User'))
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiBearerAuth('JWT-auth')
   @ApiResponseDecorator(IUser, true)
   @ApiErrorResponseDecorator({
     validation: true,
