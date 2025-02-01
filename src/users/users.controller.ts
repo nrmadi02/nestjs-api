@@ -16,7 +16,7 @@ import { UserQueryDto } from './dto/user-query.dto';
 import { ApiResponseDecorator } from 'src/common/decorators/api-response.decorator';
 import { ApiErrorResponseDecorator } from 'src/common/decorators/api-error-response.decorator';
 import { SucessResponse } from 'src/common/utils/response.util';
-import { IUser } from './entities/user.entity';
+import { UserDto } from './dto/user.dto';
 import {
   ApiBearerAuth,
   ApiCreatedResponse,
@@ -43,7 +43,7 @@ export class UsersController {
   @CheckPolicies((ability: AppAbility) => ability.can('create', 'User'))
   @ApiOperation({ summary: 'Create user' })
   @ApiBearerAuth('JWT-auth')
-  @ApiResponseDecorator(IUser)
+  @ApiResponseDecorator(UserDto)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
@@ -52,7 +52,7 @@ export class UsersController {
   @ApiCreatedResponse({
     schema: {
       allOf: [{ $ref: getSchemaPath(ApiResponse) }],
-      properties: { data: { $ref: getSchemaPath(IUser) } },
+      properties: { data: { $ref: getSchemaPath(UserDto) } },
     },
   })
   async create(@Body() createUserDto: CreateUserDto) {
@@ -64,7 +64,7 @@ export class UsersController {
   @CheckPolicies((ability: AppAbility) => ability.can('read', 'User'))
   @ApiOperation({ summary: 'Get all users' })
   @ApiBearerAuth('JWT-auth')
-  @ApiResponseDecorator(IUser, true)
+  @ApiResponseDecorator(UserDto, true)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
@@ -79,7 +79,7 @@ export class UsersController {
   @CheckPolicies((ability: AppAbility) => ability.can('read', 'User'))
   @ApiOperation({ summary: 'Get user' })
   @ApiBearerAuth('JWT-auth')
-  @ApiResponseDecorator(IUser)
+  @ApiResponseDecorator(UserDto)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
@@ -94,7 +94,7 @@ export class UsersController {
   @CheckPolicies((ability: AppAbility) => ability.can('update', 'User'))
   @ApiOperation({ summary: 'Update user' })
   @ApiBearerAuth('JWT-auth')
-  @ApiResponseDecorator(IUser)
+  @ApiResponseDecorator(UserDto)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
@@ -109,7 +109,7 @@ export class UsersController {
   @CheckPolicies((ability: AppAbility) => ability.can('delete', 'User'))
   @ApiOperation({ summary: 'Remove user' })
   @ApiBearerAuth('JWT-auth')
-  @ApiResponseDecorator(IUser)
+  @ApiResponseDecorator(UserDto)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
@@ -124,7 +124,7 @@ export class UsersController {
   @CheckPolicies((ability: AppAbility) => ability.can('delete', 'User'))
   @ApiOperation({ summary: 'Hard remove user' })
   @ApiBearerAuth('JWT-auth')
-  @ApiResponseDecorator(IUser)
+  @ApiResponseDecorator(UserDto)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
@@ -139,7 +139,7 @@ export class UsersController {
   @CheckPolicies((ability: AppAbility) => ability.can('delete', 'User'))
   @ApiOperation({ summary: 'Restore user' })
   @ApiBearerAuth('JWT-auth')
-  @ApiResponseDecorator(IUser)
+  @ApiResponseDecorator(UserDto)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
