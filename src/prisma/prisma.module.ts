@@ -5,7 +5,7 @@ import { PrismaQueryHelperService } from './query-helper.service';
 
 @Global()
 @Module({
-  exports: [PrismaService],
+  exports: [PrismaService, PrismaQueryHelperService],
   providers: [PrismaService, PrismaClientProvider, PrismaQueryHelperService],
 })
 export class PrismaModule {}

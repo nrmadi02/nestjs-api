@@ -17,6 +17,7 @@ import { UserQueryDto } from './dto/user-query.dto';
 import * as bcrypt from 'bcrypt';
 import { IUser } from './entities/user.entity';
 import { Prisma } from '@prisma/client';
+import { PrismaQueryHelperService } from 'src/prisma/query-helper.service';
 
 @Injectable()
 export class UsersService {
@@ -24,6 +25,7 @@ export class UsersService {
     @InjectPinoLogger(UsersService.name)
     private readonly logger: PinoLogger,
     private readonly prisma: PrismaService,
+    private readonly queryHelper: PrismaQueryHelperService,
   ) {}
 
   userDefaultSelect = Prisma.validator<Prisma.UserSelect>()({
@@ -36,6 +38,7 @@ export class UsersService {
     lastLoginAt: true,
     createdAt: true,
     updatedAt: true,
+    deletedAt: true,
     profile: {
       select: {
         id: true,
@@ -64,6 +67,8 @@ export class UsersService {
   ): Promise<boolean> {
     return await bcrypt.compare(plainPassword, hashedPassword);
   }
+
+  extendedPrisma = this.prisma.$extends(this.queryHelper.softDeleteExtension);
 
   private buildUserFilterConditions(
     query: UserQueryDto,
@@ -130,8 +135,8 @@ export class UsersService {
     this.logger.info('Get all users');
 
     const filter = this.buildUserFilterConditions(query);
-    const [users, total] = await this.prisma.$transaction([
-      this.prisma.user.findMany({
+    const [users, total] = await this.extendedPrisma.$transaction([
+      this.extendedPrisma.user.findMany({
         where: filter,
         ...paginate({
           page: query.page,
@@ -139,7 +144,7 @@ export class UsersService {
         }),
         select: this.userDefaultSelect,
       }),
-      this.prisma.user.count({
+      this.extendedPrisma.user.count({
         where: filter,
       }),
     ]);
@@ -153,7 +158,7 @@ export class UsersService {
   async findOne(id: number): Promise<IUser> {
     this.logger.info(`Get user with id: ${id}`);
 
-    const user = await this.prisma.user.findUnique({
+    const user = await this.extendedPrisma.user.findUnique({
       where: { id },
       select: this.userDefaultSelect,
     });
@@ -167,7 +172,7 @@ export class UsersService {
   async findByEmail(email: string): Promise<IUser> {
     this.logger.info(`Get user with email: ${email}`);
 
-    const user = await this.prisma.user.findUnique({
+    const user = await this.extendedPrisma.user.findUnique({
       where: { email },
       select: this.userDefaultSelect,
     });
@@ -183,7 +188,7 @@ export class UsersService {
     this.logger.info(`Update user with id: ${id}`);
 
     if (updateUserDto.email || updateUserDto.username) {
-      const existingUser = await this.prisma.user.findFirst({
+      const existingUser = await this.extendedPrisma.user.findFirst({
         where: {
           OR: [
             updateUserDto.email ? { email: updateUserDto.email } : {},
@@ -221,7 +226,7 @@ export class UsersService {
     updatePasswordDto: UpdatePasswordDto,
   ): Promise<boolean> {
     this.logger.info(`Update password for user with id: ${id}`);
-    const user = await this.prisma.user.findUnique({ where: { id } });
+    const user = await this.extendedPrisma.user.findUnique({ where: { id } });
 
     if (!user) {
       throw new NotFoundException([`User with ID ${id} not found`]);
@@ -256,7 +261,40 @@ export class UsersService {
       throw new NotFoundException([`User with id: ${id} not found`]);
     }
 
-    await this.prisma.user.delete({ where: { id } });
+    await this.extendedPrisma.user.softDelete({
+      id,
+    });
+
+    return true;
+  }
+
+  async hardRemove(id: number): Promise<boolean> {
+    this.logger.info(`Hard remove user with id: ${id}`);
+
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException([`User with id: ${id} not found`]);
+    }
+
+    await this.prisma.user.delete({
+      where: { id },
+    });
+
+    return true;
+  }
+
+  async restore(id: number): Promise<boolean> {
+    this.logger.info(`Restore user with id: ${id}`);
+
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException([`User with id: ${id} not found`]);
+    }
+
+    await this.prisma.user.update({
+      where: { id },
+      data: { deletedAt: null },
+    });
 
     return true;
   }
