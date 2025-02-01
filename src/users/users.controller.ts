@@ -109,7 +109,7 @@ export class UsersController {
   @CheckPolicies((ability: AppAbility) => ability.can('delete', 'User'))
   @ApiOperation({ summary: 'Remove user' })
   @ApiBearerAuth('JWT-auth')
-  @ApiResponseDecorator(UserDto)
+  @ApiResponseDecorator(Boolean)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
@@ -120,11 +120,11 @@ export class UsersController {
     return SucessResponse('Success to remove user', 200, true);
   }
 
-  @Delete('hard-remove/:id')
+  @Delete('hard-delete/:id')
   @CheckPolicies((ability: AppAbility) => ability.can('delete', 'User'))
-  @ApiOperation({ summary: 'Hard remove user' })
+  @ApiOperation({ summary: 'Hard delete user' })
   @ApiBearerAuth('JWT-auth')
-  @ApiResponseDecorator(UserDto)
+  @ApiResponseDecorator(Boolean)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
@@ -139,7 +139,7 @@ export class UsersController {
   @CheckPolicies((ability: AppAbility) => ability.can('delete', 'User'))
   @ApiOperation({ summary: 'Restore user' })
   @ApiBearerAuth('JWT-auth')
-  @ApiResponseDecorator(UserDto)
+  @ApiResponseDecorator(Boolean)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,

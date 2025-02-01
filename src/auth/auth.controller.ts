@@ -13,13 +13,15 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { GetUser } from './decorators/get-user.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, OmitType } from '@nestjs/swagger';
+import { UserDto } from 'src/users/dto/user.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
+  @ApiOperation({ summary: 'Login user' })
   @ApiResponseDecorator(AuthResponseDto)
   @ApiErrorResponseDecorator({
     validation: true,
@@ -38,7 +40,8 @@ export class AuthController {
   }
 
   @Post('register')
-  @ApiResponseDecorator(AuthResponseDto)
+  @ApiOperation({ summary: 'Register user' })
+  @ApiResponseDecorator(OmitType(UserDto, ['createdAt', 'updatedAt']))
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
@@ -52,6 +55,7 @@ export class AuthController {
   }
 
   @Post('refresh-token')
+  @ApiOperation({ summary: 'Refresh token' })
   @ApiResponseDecorator(AuthResponseDto)
   @ApiErrorResponseDecorator({
     validation: true,
@@ -66,7 +70,8 @@ export class AuthController {
   }
 
   @Post('verify-email')
-  @ApiResponseDecorator(AuthResponseDto)
+  @ApiOperation({ summary: 'Verify email' })
+  @ApiResponseDecorator(Boolean)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
@@ -80,7 +85,8 @@ export class AuthController {
   }
 
   @Post('forgot-password')
-  @ApiResponseDecorator(AuthResponseDto)
+  @ApiOperation({ summary: 'Forgot password' })
+  @ApiResponseDecorator(Boolean)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
@@ -94,7 +100,8 @@ export class AuthController {
   }
 
   @Post('reset-password')
-  @ApiResponseDecorator(AuthResponseDto)
+  @ApiOperation({ summary: 'Reset password' })
+  @ApiResponseDecorator(Boolean)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
@@ -108,9 +115,10 @@ export class AuthController {
   }
 
   @Post('logout')
+  @ApiOperation({ summary: 'Logout user' })
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiResponseDecorator(AuthResponseDto)
+  @ApiResponseDecorator(Boolean)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
