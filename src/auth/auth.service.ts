@@ -1,4 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Prisma, TokenType } from '@prisma/client';
@@ -8,6 +14,12 @@ import { UsersService } from 'src/users/users.service';
 import { v4 as uuidv4 } from 'uuid';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
+import { RegisterDto } from './dto/register.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { JsonObject } from '@prisma/client/runtime/library';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 
 @Injectable()
 export class AuthService {
@@ -30,11 +42,11 @@ export class AuthService {
     const numValue = parseInt(value, 10);
 
     switch (unit) {
-      case 'm': // minutes
+      case 'm':
         return numValue * 60 * 1000;
-      case 'h': // hours
+      case 'h':
         return numValue * 60 * 60 * 1000;
-      case 'd': // days
+      case 'd':
         return numValue * 24 * 60 * 60 * 1000;
       default:
         throw new Error('Invalid duration unit');
@@ -107,6 +119,62 @@ export class AuthService {
     };
   }
 
+  async register(registerDto: RegisterDto) {
+    const { password, passwordConfirmation, ...userData } = registerDto;
+
+    if (password !== passwordConfirmation) {
+      throw new BadRequestException(['Passwords do not match']);
+    }
+
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: userData.email }, { username: userData.username }],
+      },
+    });
+
+    if (existingUser) {
+      throw new ConflictException(['Email or username already exists']);
+    }
+
+    const hashedPassword = await this.hashPassword(password);
+    const user = await this.prisma.user.create({
+      data: {
+        ...userData,
+        password: hashedPassword,
+        profile: {
+          create: {},
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        isActive: true,
+        isVerified: true,
+        uuid: true,
+        profile: true,
+        role: {
+          select: {
+            name: true,
+            description: true,
+            permissions: true,
+          },
+        },
+      },
+    });
+
+    // Generate verification token
+    // const verificationToken = await this.generateToken(
+    //   user.id,
+    //   TokenType.VERIFY_EMAIL,
+    //   this.config.get('JWT_VERIFICATION_EXPIRATION') as string,
+    // );
+
+    // TODO: Send verification email
+
+    return user;
+  }
+
   async login(loginDto: LoginDto, deviceInfo?: Prisma.JsonObject) {
     const user = await this.prisma.user.findUnique({
       where: { email: loginDto.email },
@@ -158,5 +226,159 @@ export class AuthService {
       },
       tokens,
     };
+  }
+
+  async refreshToken(refreshTokenDto: RefreshTokenDto) {
+    const refreshToken = await this.prisma.refreshToken.findFirst({
+      where: {
+        token: refreshTokenDto.refreshToken,
+        isRevoked: false,
+        expires: {
+          gt: new Date(),
+        },
+      },
+      select: {
+        id: true,
+        token: true,
+        userId: true,
+        deviceInfo: true,
+        user: {
+          select: {
+            isActive: true,
+            id: true,
+            uuid: true,
+            email: true,
+            username: true,
+            isVerified: true,
+            profile: true,
+            role: {
+              select: {
+                name: true,
+                description: true,
+                permissions: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!refreshToken || !refreshToken.user.isActive) {
+      throw new UnauthorizedException(['Invalid refresh token']);
+    }
+
+    await this.prisma.refreshToken.update({
+      where: { id: refreshToken.id },
+      data: { isRevoked: true },
+    });
+
+    const tokens = await this.generateAuthTokens(
+      refreshToken.userId,
+      refreshToken.deviceInfo as JsonObject,
+    );
+
+    return {
+      user: refreshToken.user,
+      tokens,
+    };
+  }
+
+  async verifyEmail(verifyEmailDto: VerifyEmailDto) {
+    const token = await this.prisma.token.findFirst({
+      where: {
+        token: verifyEmailDto.token,
+        type: TokenType.VERIFY_EMAIL,
+        expires: {
+          gt: new Date(),
+        },
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    if (!token) {
+      throw new BadRequestException(['Invalid or expired token']);
+    }
+
+    await this.prisma.user.update({
+      where: { id: token.userId },
+      data: { isVerified: true },
+    });
+
+    await this.prisma.token.delete({
+      where: { id: token.id },
+    });
+
+    return true;
+  }
+
+  async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: forgotPasswordDto.email },
+    });
+
+    if (!user) {
+      throw new NotFoundException(['User not found']);
+    }
+
+    // Generate reset password token
+    // const resetToken = await this.generateToken(
+    //   user.id,
+    //   TokenType.RESET_PASSWORD,
+    //   this.config.get('JWT_RESET_PASSWORD_EXPIRATION') as string,
+    // );
+
+    // TODO: Send reset password email
+
+    return true;
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordDto) {
+    const { token, password, passwordConfirmation } = resetPasswordDto;
+
+    if (password !== passwordConfirmation) {
+      throw new BadRequestException(['Passwords do not match']);
+    }
+
+    const resetToken = await this.prisma.token.findFirst({
+      where: {
+        token,
+        type: TokenType.RESET_PASSWORD,
+        expires: {
+          gt: new Date(),
+        },
+      },
+    });
+
+    if (!resetToken) {
+      throw new BadRequestException(['Invalid or expired token']);
+    }
+
+    const hashedPassword = await this.hashPassword(password);
+    await this.prisma.user.update({
+      where: { id: resetToken.userId },
+      data: { password: hashedPassword },
+    });
+
+    await this.prisma.token.delete({
+      where: { id: resetToken.id },
+    });
+
+    await this.prisma.refreshToken.updateMany({
+      where: { userId: resetToken.userId },
+      data: { isRevoked: true },
+    });
+
+    return true;
+  }
+
+  async logout(userId: number) {
+    await this.prisma.refreshToken.updateMany({
+      where: { userId },
+      data: { isRevoked: true },
+    });
+
+    return true;
   }
 }

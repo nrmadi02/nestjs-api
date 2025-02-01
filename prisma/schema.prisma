@@ -42,25 +42,27 @@ model User {
   isVerified  Boolean   @default(false)
   isActive    Boolean   @default(true)
   lastLoginAt DateTime? @db.Timestamp(6)
+  deletedAt   DateTime?
 
   profile       Profile?
   tokens        Token[]
   refreshTokens RefreshToken[]
 
-  role      Role?    @relation(fields: [roleId], references: [id])
-  roleId    Int?
+  role   Role? @relation(fields: [roleId], references: [id])
+  roleId Int?
 
   createdAt DateTime @default(now()) @db.Timestamp(6)
   updatedAt DateTime @updatedAt @db.Timestamp(6)
 
   @@index([email, isActive])
+  @@index([lastLoginAt])
   @@map("users")
 }
 
 model Role {
-  id          Int     @id @default(autoincrement())
-  name        UserRole  @unique
-  description String? @db.Text
+  id          Int      @id @default(autoincrement())
+  name        UserRole @unique
+  description String?  @db.Text
 
   permissions Permission[]
   users       User[]

@@ -34,10 +34,15 @@ import { Roles } from 'src/auth/decorators/role-decorator';
 
 @ApiTags('[ADMIN] Users')
 @Controller('users')
+@Roles('ADMIN')
+@UseGuards(JwtAuthGuard, RolesGuard, PoliciesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @CheckPolicies((ability: AppAbility) => ability.can('create', 'User'))
+  @ApiOperation({ summary: 'Create user' })
+  @ApiBearerAuth('JWT-auth')
   @ApiResponseDecorator(IUser)
   @ApiErrorResponseDecorator({
     validation: true,
@@ -56,8 +61,6 @@ export class UsersController {
   }
 
   @Get()
-  @Roles('ADMIN')
-  @UseGuards(JwtAuthGuard, RolesGuard, PoliciesGuard)
   @CheckPolicies((ability: AppAbility) => ability.can('read', 'User'))
   @ApiOperation({ summary: 'Get all users' })
   @ApiBearerAuth('JWT-auth')
@@ -73,6 +76,9 @@ export class UsersController {
   }
 
   @Get(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can('read', 'User'))
+  @ApiOperation({ summary: 'Get user' })
+  @ApiBearerAuth('JWT-auth')
   @ApiResponseDecorator(IUser)
   @ApiErrorResponseDecorator({
     validation: true,
@@ -85,6 +91,9 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can('update', 'User'))
+  @ApiOperation({ summary: 'Update user' })
+  @ApiBearerAuth('JWT-auth')
   @ApiResponseDecorator(IUser)
   @ApiErrorResponseDecorator({
     validation: true,
@@ -97,6 +106,9 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can('delete', 'User'))
+  @ApiOperation({ summary: 'Remove user' })
+  @ApiBearerAuth('JWT-auth')
   @ApiResponseDecorator(IUser)
   @ApiErrorResponseDecorator({
     validation: true,
