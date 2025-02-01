@@ -1,26 +1,18 @@
+import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { UserDto } from 'src/users/dto/user.dto';
+
+export class TokensDto {
+  @ApiProperty({ type: String })
+  accessToken: string;
+
+  @ApiProperty({ type: String })
+  refreshToken: string;
+}
+
 export class AuthResponseDto {
-  user: {
-    id: number;
-    uuid: string;
-    username: string;
-    email: string;
-    isVerified: boolean;
-    isActive: boolean;
-    lastLoginAt: Date | null;
-    profile?: {
-      firstName: string | null;
-      lastName: string | null;
-      avatar: string | null;
-      phoneNumber: string | null;
-    } | null;
-    role?: {
-      id: number;
-      name: string | null;
-      description?: string | null;
-    } | null;
-  };
-  tokens: {
-    accessToken: string;
-    refreshToken: string;
-  };
+  @ApiProperty({ type: OmitType(UserDto, ['createdAt', 'updatedAt']) })
+  user: Omit<UserDto, 'createdAt' | 'updatedAt'>;
+
+  @ApiProperty({ type: TokensDto })
+  tokens: TokensDto;
 }

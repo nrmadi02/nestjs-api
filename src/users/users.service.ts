@@ -15,9 +15,9 @@ import {
 } from 'src/common/utils/pagination.util';
 import { UserQueryDto } from './dto/user-query.dto';
 import * as bcrypt from 'bcrypt';
-import { IUser } from './entities/user.entity';
 import { Prisma } from '@prisma/client';
 import { PrismaQueryHelperService } from 'src/prisma/query-helper.service';
+import { UserDto } from './dto/user.dto';
 
 @Injectable()
 export class UsersService {
@@ -92,7 +92,7 @@ export class UsersService {
     return whereCondition;
   }
 
-  async create(createUserDto: CreateUserDto): Promise<IUser> {
+  async create(createUserDto: CreateUserDto): Promise<UserDto> {
     this.logger.info('Create user');
 
     const { email, username, roleId } = createUserDto;
@@ -131,7 +131,7 @@ export class UsersService {
     return user;
   }
 
-  async findAll(query: UserQueryDto): Promise<PaginateOutput<IUser>> {
+  async findAll(query: UserQueryDto): Promise<PaginateOutput<UserDto>> {
     this.logger.info('Get all users');
 
     const filter = this.buildUserFilterConditions(query);
@@ -149,13 +149,13 @@ export class UsersService {
       }),
     ]);
 
-    return paginateOutput<IUser>(users, total, {
+    return paginateOutput<UserDto>(users, total, {
       page: query.page,
       size: query.size,
     });
   }
 
-  async findOne(id: number): Promise<IUser> {
+  async findOne(id: number): Promise<UserDto> {
     this.logger.info(`Get user with id: ${id}`);
 
     const user = await this.extendedPrisma.user.findUnique({
@@ -169,7 +169,7 @@ export class UsersService {
     return user;
   }
 
-  async findByEmail(email: string): Promise<IUser> {
+  async findByEmail(email: string): Promise<UserDto> {
     this.logger.info(`Get user with email: ${email}`);
 
     const user = await this.extendedPrisma.user.findUnique({
@@ -184,7 +184,7 @@ export class UsersService {
     return user;
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<IUser> {
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<UserDto> {
     this.logger.info(`Update user with id: ${id}`);
 
     if (updateUserDto.email || updateUserDto.username) {
@@ -299,7 +299,7 @@ export class UsersService {
     return true;
   }
 
-  async updateLastLogin(id: number): Promise<IUser> {
+  async updateLastLogin(id: number): Promise<UserDto> {
     this.logger.info(`Update last login for user with id: ${id}`);
     const user = await this.prisma.user.update({
       where: { id },
