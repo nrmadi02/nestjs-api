@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { PrismaClient, UserRole, Action } from '@prisma/client';
+import { PrismaClient, Action } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 const adminRoleObj = {
-  name: UserRole.ADMIN,
+  name: 'Admin',
   description: 'Administrator with full access',
   permissions: {
     create: [
@@ -18,7 +18,7 @@ const adminRoleObj = {
 };
 
 const userRoleObj = {
-  name: UserRole.USER,
+  name: 'User',
   description: 'Regular user with limited access',
   permissions: {
     create: [
@@ -38,7 +38,7 @@ const userRoleObj = {
 
 async function main() {
   const adminRole = await prisma.role.upsert({
-    where: { name: UserRole.ADMIN },
+    where: { name: 'Admin' },
     update: {
       ...adminRoleObj,
       permissions: {
@@ -76,7 +76,7 @@ async function main() {
   });
 
   const userRole = await prisma.role.upsert({
-    where: { name: UserRole.USER },
+    where: { name: 'User' },
     update: {
       ...userRoleObj,
       permissions: {
