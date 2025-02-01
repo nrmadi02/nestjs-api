@@ -44,18 +44,18 @@ export class PrismaClientProvider
 
   async onModuleInit() {
     await this.$connect();
-    this.$on('query', (e) => {
-      this.logger.debug(e, 'Prisma query');
-    });
-    this.$on('info', (e) => {
-      this.logger.debug(e, 'Prisma info');
-    });
-    this.$on('warn', (e) => {
-      this.logger.warn(e, 'Prisma warn');
-    });
-    this.$on('error', (e) => {
-      this.logger.error(e, 'Prisma error');
-    });
+    // this.$on('query', (e) => {
+    //   this.logger.debug(e, 'Prisma query');
+    // });
+    // this.$on('info', (e) => {
+    //   this.logger.debug(e, 'Prisma info');
+    // });
+    // this.$on('warn', (e) => {
+    //   this.logger.warn(e, 'Prisma warn');
+    // });
+    // this.$on('error', (e) => {
+    //   this.logger.error(e, 'Prisma error');
+    // });
   }
 
   async onModuleDestroy() {

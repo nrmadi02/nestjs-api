@@ -13,9 +13,129 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum TokenType {
+  ACCESS
+  REFRESH
+  RESET_PASSWORD
+  VERIFY_EMAIL
+}
+
+enum Action {
+  MANAGE
+  CREATE
+  READ
+  UPDATE
+  DELETE
+}
+
 model User {
-  id       Int    @id @default(autoincrement())
-  username String @unique
-  email    String @unique
-  password String
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique @default(uuid())
+  username    String    @unique @db.VarChar(50)
+  email       String    @unique @db.VarChar(255)
+  password    String    @db.Text
+  isVerified  Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime? @db.Timestamp(6)
+  deletedAt   DateTime?
+
+  profile       Profile?
+  tokens        Token[]
+  refreshTokens RefreshToken[]
+
+  role   Role? @relation(fields: [roleId], references: [id])
+  roleId Int?
+
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @db.Timestamp(6)
+
+  @@index([email, isActive])
+  @@index([lastLoginAt])
+  @@map("users")
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        UserRole @unique
+  description String?  @db.Text
+
+  permissions Permission[]
+  users       User[]
+
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @db.Timestamp(6)
+
+  @@map("roles")
+}
+
+model Permission {
+  id         Int     @id @default(autoincrement())
+  action     Action
+  subject    String
+  conditions Json?
+  reason     String? @db.Text
+
+  roles Role[]
+
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @db.Timestamp(6)
+
+  @@unique([action, subject])
+  @@map("permissions")
+}
+
+model Profile {
+  id          Int     @id @default(autoincrement())
+  firstName   String? @db.VarChar(50)
+  lastName    String? @db.VarChar(50)
+  avatar      String? @db.Text
+  phoneNumber String? @unique @db.VarChar(20)
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int  @unique
+
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @db.Timestamp(6)
+
+  @@map("profiles")
+}
+
+model Token {
+  id      Int       @id @default(autoincrement())
+  token   String    @unique @db.Text
+  type    TokenType
+  expires DateTime  @db.Timestamp(6)
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @db.Timestamp(6)
+
+  @@index([token, type])
+  @@index([userId, type])
+  @@map("tokens")
+}
+
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  token      String   @unique @db.Text
+  expires    DateTime @db.Timestamp(6)
+  isRevoked  Boolean  @default(false)
+  deviceInfo Json?
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @db.Timestamp(6)
+
+  @@index([token, isRevoked])
+  @@index([userId, isRevoked])
+  @@map("refresh_tokens")
 }

@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -16,14 +17,32 @@ import { ApiResponseDecorator } from 'src/common/decorators/api-response.decorat
 import { ApiErrorResponseDecorator } from 'src/common/decorators/api-error-response.decorator';
 import { SucessResponse } from 'src/common/utils/response.util';
 import { IUser } from './entities/user.entity';
-import { ApiCreatedResponse, getSchemaPath } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOperation,
+  ApiTags,
+  getSchemaPath,
+} from '@nestjs/swagger';
 import { ApiResponse } from 'src/common/dtos/api-response.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/role-auth.guard';
+import { PoliciesGuard } from 'src/casl/guards/policies.guard';
+import { CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
+import { AppAbility } from 'src/casl/casl-ability.factory';
+import { Roles } from 'src/auth/decorators/role-decorator';
 
+@ApiTags('[ADMIN] Users')
 @Controller('users')
+@Roles('ADMIN')
+@UseGuards(JwtAuthGuard, RolesGuard, PoliciesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @CheckPolicies((ability: AppAbility) => ability.can('create', 'User'))
+  @ApiOperation({ summary: 'Create user' })
+  @ApiBearerAuth('JWT-auth')
   @ApiResponseDecorator(IUser)
   @ApiErrorResponseDecorator({
     validation: true,
@@ -42,6 +61,9 @@ export class UsersController {
   }
 
   @Get()
+  @CheckPolicies((ability: AppAbility) => ability.can('read', 'User'))
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiBearerAuth('JWT-auth')
   @ApiResponseDecorator(IUser, true)
   @ApiErrorResponseDecorator({
     validation: true,
@@ -54,6 +76,9 @@ export class UsersController {
   }
 
   @Get(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can('read', 'User'))
+  @ApiOperation({ summary: 'Get user' })
+  @ApiBearerAuth('JWT-auth')
   @ApiResponseDecorator(IUser)
   @ApiErrorResponseDecorator({
     validation: true,
@@ -66,6 +91,9 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can('update', 'User'))
+  @ApiOperation({ summary: 'Update user' })
+  @ApiBearerAuth('JWT-auth')
   @ApiResponseDecorator(IUser)
   @ApiErrorResponseDecorator({
     validation: true,
@@ -78,6 +106,9 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can('delete', 'User'))
+  @ApiOperation({ summary: 'Remove user' })
+  @ApiBearerAuth('JWT-auth')
   @ApiResponseDecorator(IUser)
   @ApiErrorResponseDecorator({
     validation: true,

@@ -6,6 +6,8 @@ import { UsersModule } from './users/users.module';
 import configuration from './config/configuration';
 import { LoggerModule } from 'nestjs-pino';
 import { pinoLoggerConfig } from './config/pino-logger.config';
+import { CaslAbilityModule } from './casl/casl-ability.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { pinoLoggerConfig } from './config/pino-logger.config';
       load: [configuration],
     }),
     UsersModule,
+    CaslAbilityModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
