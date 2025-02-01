@@ -20,6 +20,7 @@ import { JsonObject } from '@prisma/client/runtime/library';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { PrismaQueryHelperService } from 'src/prisma/query-helper.service';
 
 @Injectable()
 export class AuthService {
@@ -30,7 +31,10 @@ export class AuthService {
     private jwtService: JwtService,
     private readonly userService: UsersService,
     private readonly config: ConfigService,
+    private readonly queryHelper: PrismaQueryHelperService,
   ) {}
+
+  extendedPrisma = this.prisma.$extends(this.queryHelper.softDeleteExtension);
 
   private parseDuration(duration: string): number {
     const matches = duration.match(/^(\d+)([mhd])$/);
@@ -120,6 +124,8 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDto) {
+    this.logger.info('Registering user');
+
     const { password, passwordConfirmation, ...userData } = registerDto;
 
     if (password !== passwordConfirmation) {
@@ -176,7 +182,9 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto, deviceInfo?: Prisma.JsonObject) {
-    const user = await this.prisma.user.findUnique({
+    this.logger.info('Logging in user');
+
+    const user = await this.extendedPrisma.user.findUnique({
       where: { email: loginDto.email },
       include: {
         profile: true,
@@ -189,7 +197,7 @@ export class AuthService {
     });
 
     if (!user || !user.isActive) {
-      throw new UnauthorizedException(['Email not found or inactive']);
+      throw new UnauthorizedException(['User not found or inactive']);
     }
 
     const isPasswordValid = await this.verifyPassword(
@@ -229,6 +237,8 @@ export class AuthService {
   }
 
   async refreshToken(refreshTokenDto: RefreshTokenDto) {
+    this.logger.info('Refreshing token');
+
     const refreshToken = await this.prisma.refreshToken.findFirst({
       where: {
         token: refreshTokenDto.refreshToken,
@@ -284,6 +294,8 @@ export class AuthService {
   }
 
   async verifyEmail(verifyEmailDto: VerifyEmailDto) {
+    this.logger.info('Verifying email');
+
     const token = await this.prisma.token.findFirst({
       where: {
         token: verifyEmailDto.token,
@@ -314,6 +326,8 @@ export class AuthService {
   }
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+    this.logger.info('Forgot password');
+
     const user = await this.prisma.user.findUnique({
       where: { email: forgotPasswordDto.email },
     });
@@ -335,6 +349,8 @@ export class AuthService {
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
+    this.logger.info('Reset password');
+
     const { token, password, passwordConfirmation } = resetPasswordDto;
 
     if (password !== passwordConfirmation) {
@@ -374,6 +390,8 @@ export class AuthService {
   }
 
   async logout(userId: number) {
+    this.logger.info('Logging out user');
+
     await this.prisma.refreshToken.updateMany({
       where: { userId },
       data: { isRevoked: true },

@@ -119,4 +119,34 @@ export class UsersController {
     await this.usersService.remove(id);
     return SucessResponse('Success to remove user', 200, true);
   }
+
+  @Delete('hard-remove/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can('delete', 'User'))
+  @ApiOperation({ summary: 'Hard remove user' })
+  @ApiBearerAuth('JWT-auth')
+  @ApiResponseDecorator(IUser)
+  @ApiErrorResponseDecorator({
+    validation: true,
+    badRequest: true,
+    notFound: true,
+  })
+  async hardRemove(@Param('id') id: number) {
+    await this.usersService.hardRemove(id);
+    return SucessResponse('Success to remove user', 200, true);
+  }
+
+  @Post('restore/:id')
+  @CheckPolicies((ability: AppAbility) => ability.can('delete', 'User'))
+  @ApiOperation({ summary: 'Restore user' })
+  @ApiBearerAuth('JWT-auth')
+  @ApiResponseDecorator(IUser)
+  @ApiErrorResponseDecorator({
+    validation: true,
+    badRequest: true,
+    notFound: true,
+  })
+  async restore(@Param('id') id: number) {
+    await this.usersService.restore(id);
+    return SucessResponse('Success to restore user', 200, true);
+  }
 }
