@@ -48,7 +48,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
           success: false,
           statusCode: status,
           message: exception.message,
-          errors: exceptionResponse.message as [],
+          errors:
+            typeof exceptionResponse.message === 'string'
+              ? [exceptionResponse.message]
+              : (exceptionResponse.message as []),
         };
       }
     }

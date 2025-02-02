@@ -9,10 +9,17 @@ const customTimestamp = () => {
 export const pinoLoggerConfig = (
   config: ConfigService,
 ): Params['pinoHttp'] => ({
-  transport: {
-    target: '@logtail/pino',
-    options: { sourceToken: config.get('LOGTAIL_SOURCE_TOKEN') as string },
-  },
+  transport: config.get('LOGTAIL_SOURCE_TOKEN')
+    ? {
+        target: '@logtail/pino',
+        options: { sourceToken: config.get('LOGTAIL_SOURCE_TOKEN') as string },
+      }
+    : {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+        },
+      },
   timestamp: customTimestamp,
   level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
 

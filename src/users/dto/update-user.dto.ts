@@ -1,21 +1,59 @@
+import { PartialType, OmitType } from '@nestjs/mapped-types';
+import { CreateUserDto } from './create-user.dto';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Exclude } from 'class-transformer';
-import { User } from '@prisma/client';
-import { IsEmail, IsNotEmpty } from 'class-validator';
 
-export class UpdateUserDto implements User {
+export class UpdateUserDto extends PartialType(
+  OmitType(CreateUserDto, ['password'] as const),
+) {
+  @IsString()
+  @MinLength(3)
+  @MaxLength(50)
   @ApiProperty()
-  @IsNotEmpty()
   username: string;
 
-  @ApiProperty()
   @IsEmail()
-  @IsNotEmpty()
+  @MaxLength(255)
+  @ApiProperty()
   email: string;
 
-  @Exclude()
-  password: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  @ApiProperty()
+  firstName?: string;
 
-  @Exclude()
-  id: number;
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  @ApiProperty()
+  lastName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  @ApiProperty()
+  phoneNumber?: string;
+
+  @IsOptional()
+  @ApiProperty()
+  @IsNotEmpty()
+  roleId: number;
+}
+
+export class UpdatePasswordDto {
+  @IsString()
+  @MinLength(8)
+  currentPassword: string;
+
+  @IsString()
+  @MinLength(8)
+  newPassword: string;
 }
