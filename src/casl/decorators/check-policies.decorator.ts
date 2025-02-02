@@ -1,6 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
 import { AppAbility } from '../casl-ability.factory';
-import { Action } from '@prisma/client';
 
 export interface IPolicyHandler {
   handle(ability: AppAbility): boolean;
@@ -17,6 +16,6 @@ export const CheckPolicies = (...handlers: PolicyHandler[]) =>
 
 export class ReadUserPolicyHandler implements IPolicyHandler {
   handle(ability: AppAbility) {
-    return ability.can(Action.READ, 'User');
+    return ability.can('read', 'user');
   }
 }

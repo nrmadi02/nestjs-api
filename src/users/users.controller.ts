@@ -34,13 +34,13 @@ import { Roles } from 'src/auth/decorators/role-decorator';
 
 @ApiTags('[ADMIN] Users')
 @Controller('users')
-@Roles('ADMIN')
+@Roles('Admin')
 @UseGuards(JwtAuthGuard, RolesGuard, PoliciesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @CheckPolicies((ability: AppAbility) => ability.can('create', 'User'))
+  @CheckPolicies((ability: AppAbility) => ability.can('create', 'user'))
   @ApiOperation({ summary: 'Create user' })
   @ApiBearerAuth('JWT-auth')
   @ApiResponseDecorator(UserDto)
@@ -48,6 +48,8 @@ export class UsersController {
     validation: true,
     badRequest: true,
     notFound: true,
+    forbidden: true,
+    unauthorized: true,
   })
   @ApiCreatedResponse({
     schema: {
@@ -61,14 +63,16 @@ export class UsersController {
   }
 
   @Get()
-  @CheckPolicies((ability: AppAbility) => ability.can('read', 'User'))
+  @CheckPolicies((ability: AppAbility) => ability.can('read', 'user'))
   @ApiOperation({ summary: 'Get all users' })
   @ApiBearerAuth('JWT-auth')
-  @ApiResponseDecorator(UserDto, true)
+  @ApiResponseDecorator(UserDto, true, true)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
     notFound: true,
+    forbidden: true,
+    unauthorized: true,
   })
   async findAll(@Query() query: UserQueryDto) {
     const { data, meta } = await this.usersService.findAll(query);
@@ -76,7 +80,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  @CheckPolicies((ability: AppAbility) => ability.can('read', 'User'))
+  @CheckPolicies((ability: AppAbility) => ability.can('read', 'user'))
   @ApiOperation({ summary: 'Get user' })
   @ApiBearerAuth('JWT-auth')
   @ApiResponseDecorator(UserDto)
@@ -84,6 +88,8 @@ export class UsersController {
     validation: true,
     badRequest: true,
     notFound: true,
+    forbidden: true,
+    unauthorized: true,
   })
   async findOne(@Param('id') id: number) {
     const user = await this.usersService.findOne(id);
@@ -91,7 +97,7 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @CheckPolicies((ability: AppAbility) => ability.can('update', 'User'))
+  @CheckPolicies((ability: AppAbility) => ability.can('update', 'user'))
   @ApiOperation({ summary: 'Update user' })
   @ApiBearerAuth('JWT-auth')
   @ApiResponseDecorator(UserDto)
@@ -99,6 +105,8 @@ export class UsersController {
     validation: true,
     badRequest: true,
     notFound: true,
+    forbidden: true,
+    unauthorized: true,
   })
   async update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto) {
     const user = await this.usersService.update(id, updateUserDto);
@@ -106,7 +114,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @CheckPolicies((ability: AppAbility) => ability.can('delete', 'User'))
+  @CheckPolicies((ability: AppAbility) => ability.can('delete', 'user'))
   @ApiOperation({ summary: 'Remove user' })
   @ApiBearerAuth('JWT-auth')
   @ApiResponseDecorator(Boolean)
@@ -114,6 +122,8 @@ export class UsersController {
     validation: true,
     badRequest: true,
     notFound: true,
+    forbidden: true,
+    unauthorized: true,
   })
   async remove(@Param('id') id: number) {
     await this.usersService.remove(id);
@@ -121,7 +131,7 @@ export class UsersController {
   }
 
   @Delete('hard-delete/:id')
-  @CheckPolicies((ability: AppAbility) => ability.can('delete', 'User'))
+  @CheckPolicies((ability: AppAbility) => ability.can('delete', 'user'))
   @ApiOperation({ summary: 'Hard delete user' })
   @ApiBearerAuth('JWT-auth')
   @ApiResponseDecorator(Boolean)
@@ -129,6 +139,8 @@ export class UsersController {
     validation: true,
     badRequest: true,
     notFound: true,
+    forbidden: true,
+    unauthorized: true,
   })
   async hardRemove(@Param('id') id: number) {
     await this.usersService.hardRemove(id);
@@ -136,7 +148,7 @@ export class UsersController {
   }
 
   @Post('restore/:id')
-  @CheckPolicies((ability: AppAbility) => ability.can('delete', 'User'))
+  @CheckPolicies((ability: AppAbility) => ability.can('delete', 'user'))
   @ApiOperation({ summary: 'Restore user' })
   @ApiBearerAuth('JWT-auth')
   @ApiResponseDecorator(Boolean)
@@ -144,6 +156,8 @@ export class UsersController {
     validation: true,
     badRequest: true,
     notFound: true,
+    forbidden: true,
+    unauthorized: true,
   })
   async restore(@Param('id') id: number) {
     await this.usersService.restore(id);

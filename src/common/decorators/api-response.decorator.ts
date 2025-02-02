@@ -5,8 +5,9 @@ import { ApiResponse, ApiResponsePaginated } from '../dtos/api-response.dto';
 export const ApiResponseDecorator = <TModel extends Type<any>>(
   model: TModel,
   isArray: boolean = false,
+  isPaginated: boolean = false,
 ) => {
-  const ResponseClass = isArray ? ApiResponsePaginated : ApiResponse;
+  const ResponseClass = isPaginated ? ApiResponsePaginated : ApiResponse;
   return applyDecorators(
     ApiExtraModels(ResponseClass, model),
     ApiOkResponse({

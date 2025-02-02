@@ -8,20 +8,18 @@ import {
   InferSubjects,
   PureAbility,
 } from '@casl/ability';
-import { Permission, User } from '@prisma/client';
+import { Permission, PrismaClient, User } from '@prisma/client';
 import { Action } from '@prisma/client';
 
-export type Actions =
-  | Action
-  | 'manage'
-  | 'read'
-  | 'create'
-  | 'update'
-  | 'delete';
+export type Actions = 'manage' | 'read' | 'create' | 'update' | 'delete';
 
-export type Subjects =
-  | InferSubjects<'User' | 'Profile' | 'Role' | 'Permission'>
-  | 'all';
+type PrismaModelNames<T> = {
+  [K in keyof T]: T[K] extends { count: any } ? K : never;
+}[keyof T];
+
+type GetPrismaModels = PrismaModelNames<Omit<PrismaClient, symbol>>;
+
+export type Subjects = InferSubjects<GetPrismaModels> | 'all';
 
 export type AppAbility = PureAbility<[Actions, Subjects]>;
 
@@ -45,14 +43,18 @@ export class CaslAbilityFactory {
         const action = permission.action.toLowerCase() as Actions;
 
         if (permission.conditions) {
-          can(action, permission.subject as any, permission.conditions);
+          can(
+            action,
+            permission.subject.toLocaleLowerCase() as any,
+            permission.conditions,
+          );
         } else {
-          can(action, permission.subject as any);
+          can(action, permission.subject.toLocaleLowerCase() as any);
         }
         if (permission.action === Action.MANAGE) {
           can(
             ['read', 'create', 'update', 'delete'] as Actions[],
-            permission.subject as any,
+            permission.subject.toLocaleLowerCase() as any,
           );
         }
       }
