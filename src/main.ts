@@ -45,7 +45,7 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, documentFactory());
 
   const port = configService.get('PORT') as number;
-  await app.listen(port ?? 3000);
+  await app.listen(port ?? 3000, '0.0.0.0');
 }
 
 void bootstrap().finally(() => {
