@@ -1,7 +1,4 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
-import { PrismaClient, Action } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { Action, PrismaClient } from '@prisma/client';
 
 const adminRoleObj = {
   name: 'Admin',
@@ -36,7 +33,7 @@ const userRoleObj = {
   },
 };
 
-async function main() {
+export async function rolePermissionSeeder(prisma: PrismaClient) {
   const adminRole = await prisma.role.upsert({
     where: { name: 'Admin' },
     update: {
@@ -109,16 +106,5 @@ async function main() {
     },
   });
 
-  console.log(`📝 Seeded ${adminRole.name} role`);
-
-  console.log(`📝 Seeded ${userRole.name} role`);
+  return { adminRole, userRole };
 }
-
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
