@@ -48,6 +48,8 @@ export class UsersController {
     validation: true,
     badRequest: true,
     notFound: true,
+    forbidden: true,
+    unauthorized: true,
   })
   @ApiCreatedResponse({
     schema: {
@@ -64,11 +66,13 @@ export class UsersController {
   @CheckPolicies((ability: AppAbility) => ability.can('read', 'user'))
   @ApiOperation({ summary: 'Get all users' })
   @ApiBearerAuth('JWT-auth')
-  @ApiResponseDecorator(UserDto, true)
+  @ApiResponseDecorator(UserDto, true, true)
   @ApiErrorResponseDecorator({
     validation: true,
     badRequest: true,
     notFound: true,
+    forbidden: true,
+    unauthorized: true,
   })
   async findAll(@Query() query: UserQueryDto) {
     const { data, meta } = await this.usersService.findAll(query);
@@ -84,6 +88,8 @@ export class UsersController {
     validation: true,
     badRequest: true,
     notFound: true,
+    forbidden: true,
+    unauthorized: true,
   })
   async findOne(@Param('id') id: number) {
     const user = await this.usersService.findOne(id);
@@ -99,6 +105,8 @@ export class UsersController {
     validation: true,
     badRequest: true,
     notFound: true,
+    forbidden: true,
+    unauthorized: true,
   })
   async update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto) {
     const user = await this.usersService.update(id, updateUserDto);
@@ -114,6 +122,8 @@ export class UsersController {
     validation: true,
     badRequest: true,
     notFound: true,
+    forbidden: true,
+    unauthorized: true,
   })
   async remove(@Param('id') id: number) {
     await this.usersService.remove(id);
@@ -129,6 +139,8 @@ export class UsersController {
     validation: true,
     badRequest: true,
     notFound: true,
+    forbidden: true,
+    unauthorized: true,
   })
   async hardRemove(@Param('id') id: number) {
     await this.usersService.hardRemove(id);
@@ -144,6 +156,8 @@ export class UsersController {
     validation: true,
     badRequest: true,
     notFound: true,
+    forbidden: true,
+    unauthorized: true,
   })
   async restore(@Param('id') id: number) {
     await this.usersService.restore(id);

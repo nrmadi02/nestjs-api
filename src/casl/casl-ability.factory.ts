@@ -43,14 +43,18 @@ export class CaslAbilityFactory {
         const action = permission.action.toLowerCase() as Actions;
 
         if (permission.conditions) {
-          can(action, permission.subject as any, permission.conditions);
+          can(
+            action,
+            permission.subject.toLocaleLowerCase() as any,
+            permission.conditions,
+          );
         } else {
-          can(action, permission.subject as any);
+          can(action, permission.subject.toLocaleLowerCase() as any);
         }
         if (permission.action === Action.MANAGE) {
           can(
             ['read', 'create', 'update', 'delete'] as Actions[],
-            permission.subject as any,
+            permission.subject.toLocaleLowerCase() as any,
           );
         }
       }
